@@ -24,14 +24,14 @@ public class PlayerController : MonoBehaviour
 
         Vector3 movement = new Vector3(moveX, 0, moveZ).normalized;
 
-        // Running with Shift
+        // Running (Shift)
         float speed = Input.GetKey(KeyCode.LeftShift) ? runSpeed : moveSpeed;
         rb.velocity = new Vector3(movement.x * speed, rb.velocity.y, movement.z * speed);
 
         // Set Animator Parameters
         anim.SetFloat("Speed", movement.magnitude * speed);
 
-        // Jumping
+        // Jumping (Spacebar)
         if (Input.GetKeyDown(KeyCode.Space) && !isJumping)
         {
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
@@ -39,7 +39,7 @@ public class PlayerController : MonoBehaviour
             anim.SetBool("IsJumping", true);
         }
 
-        // Fix character rotation
+        // Character rotation
         if (movement.magnitude > 0)
         {
             transform.rotation = Quaternion.LookRotation(movement);

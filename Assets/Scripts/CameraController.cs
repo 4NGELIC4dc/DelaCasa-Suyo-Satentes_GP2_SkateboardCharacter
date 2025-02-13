@@ -49,7 +49,6 @@ public class CameraController : MonoBehaviour
             Vector3 zoomDirection = transform.forward * scroll * zoomSpeed;
             Vector3 newPosition = transform.position + zoomDirection;
 
-            // Ensure the camera does not go beyond minZoom or maxZoom
             float newDistance = (newPosition - Vector3.zero).magnitude;
             if (newDistance > minZoom && newDistance < maxZoom)
             {
