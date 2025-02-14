@@ -5,10 +5,10 @@ public abstract class SkateboardCharacter : MonoBehaviour
 {
     [Header("Character Stats")]
     public float walkSpeed = 2f;
-    public float jogSpeed = 4f;
-    public float jumpForce = 10f;
-    public float skateboardSpeed = 4f;
-    public float pushSpeed = 6f;
+    public float jogSpeed = 6f;
+    public float jumpForce = 6f;
+    public float skateboardSpeed = 6f;
+    public float pushSpeed = 8f;
 
     protected bool isJogging = false;
     protected bool isJumping = false;

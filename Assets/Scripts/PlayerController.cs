@@ -3,8 +3,8 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     public float walkSpeed = 2f;
-    public float jogSpeed = 4f;
-    public float jumpForce = 6f; // Reduced jump height
+    public float jogSpeed = 6f;
+    public float jumpForce = 6f; 
     public float skateSpeed = 6f;
     private float currentSpeed;
 
@@ -14,11 +14,21 @@ public class PlayerController : MonoBehaviour
     private bool isSkateboarding = false;
     private bool isPushing = false;
 
+    public GameObject skateboardPrefab; 
+    private GameObject skateboardInstance;
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         animator = GetComponent<Animator>();
-        currentSpeed = walkSpeed; // Start with walking speed
+        currentSpeed = walkSpeed; 
+
+        // Skateboard spawn (but is initially disabled)
+        if (skateboardPrefab != null)
+        {
+            skateboardInstance = Instantiate(skateboardPrefab, transform.position, Quaternion.identity);
+            skateboardInstance.SetActive(false); // Hide skateboard at start
+        }
     }
 
     void Update()
@@ -26,12 +36,22 @@ public class PlayerController : MonoBehaviour
         MovePlayer();
         HandleJump();
         HandleSkateboarding();
+
+        if (isSkateboarding && skateboardInstance != null)
+        {
+            UpdateSkateboardPosition(); // Make skateboard follow player
+        }
     }
 
     void MovePlayer()
     {
         float moveX = Input.GetAxis("Horizontal"); // A/D or Left/Right
         float moveZ = Input.GetAxis("Vertical");   // W/S or Up/Down
+
+        if (!isSkateboarding)
+        {
+            currentSpeed = Input.GetKey(KeyCode.LeftShift) ? jogSpeed : walkSpeed;
+        }
 
         Vector3 movement = new Vector3(moveX, 0, moveZ).normalized * currentSpeed;
         rb.velocity = new Vector3(movement.x, rb.velocity.y, movement.z);
@@ -43,11 +63,9 @@ public class PlayerController : MonoBehaviour
         }
 
         // Handle Animations
-        bool isMoving = movement.magnitude > 0;
-
-        animator.SetBool("isIdle", !isMoving && !isSkateboarding);
-        animator.SetBool("isWalking", isMoving && !Input.GetKey(KeyCode.LeftShift) && !isSkateboarding);
-        animator.SetBool("isJogging", isMoving && Input.GetKey(KeyCode.LeftShift) && !isSkateboarding);
+        animator.SetBool("isIdle", movement.magnitude == 0 && !isSkateboarding);
+        animator.SetBool("isWalking", movement.magnitude > 0 && !Input.GetKey(KeyCode.LeftShift) && !isSkateboarding);
+        animator.SetBool("isJogging", movement.magnitude > 0 && Input.GetKey(KeyCode.LeftShift) && !isSkateboarding);
         animator.SetBool("isSkateboarding", isSkateboarding && !isJumping);
         animator.SetBool("isPushing", isPushing && !isJumping);
     }
@@ -59,12 +77,9 @@ public class PlayerController : MonoBehaviour
             rb.AddForce(Vector3.up * jumpForce, ForceMode.Impulse);
             isJumping = true;
 
-            // Only jumping animation should play
             animator.SetBool("isJumping", true);
             animator.SetBool("isSkateboarding", false);
             animator.SetBool("isPushing", false);
-            animator.SetBool("isWalking", false);
-            animator.SetBool("isJogging", false);
         }
     }
 
@@ -72,13 +87,17 @@ public class PlayerController : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.LeftControl)) // Toggle skateboarding mode
         {
-            isSkateboarding = !isSkateboarding;
+            isSkateboarding = !isSkateboarding; // Flip state
 
             if (isSkateboarding)
             {
                 currentSpeed = skateSpeed;
                 animator.SetBool("isSkateboarding", true);
-                animator.SetBool("isIdle", false);
+
+                if (skateboardInstance != null)
+                {
+                    skateboardInstance.SetActive(true); // Show skateboard
+                }
             }
             else
             {
@@ -86,6 +105,11 @@ public class PlayerController : MonoBehaviour
                 animator.SetBool("isSkateboarding", false);
                 animator.SetBool("isPushing", false);
                 animator.SetBool("isIdle", true); // Reset to idle animation
+
+                if (skateboardInstance != null)
+                {
+                    skateboardInstance.SetActive(false); // Hide skateboard
+                }
             }
         }
 
@@ -95,8 +119,7 @@ public class PlayerController : MonoBehaviour
             {
                 isPushing = true;
                 animator.SetBool("isPushing", true);
-                animator.SetBool("isJogging", false); // Prevent jogging animation
-                currentSpeed = skateSpeed * 2f; // Increase speed while pushing
+                currentSpeed = skateSpeed * 2f; 
             }
             else
             {
@@ -104,6 +127,19 @@ public class PlayerController : MonoBehaviour
                 animator.SetBool("isPushing", false);
                 currentSpeed = skateSpeed;
             }
+        }
+    }
+
+    void UpdateSkateboardPosition()
+    {
+        if (skateboardInstance != null)
+        {
+            Vector3 newPos = transform.position;
+            newPos.y = 0.35f; 
+            skateboardInstance.transform.position = newPos;
+
+            // Rotate skateboard to match the player movement direction
+            skateboardInstance.transform.rotation = Quaternion.LookRotation(transform.forward);
         }
     }
 
