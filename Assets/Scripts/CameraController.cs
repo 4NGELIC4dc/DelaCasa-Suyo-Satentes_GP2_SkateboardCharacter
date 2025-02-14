@@ -2,15 +2,31 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
+    public Transform player;
+    public Vector3 offset = new Vector3(0, 3, -5);
+    public float followSpeed = 5f;
+
     public float sensitivity = 2f;
     public float zoomSpeed = 10f;
     public float minZoom = 5f;
-    public float maxZoom = 500f;
+    public float maxZoom = 50f;
 
     private bool isDragging = false;
     private Vector3 lastMousePosition;
 
-    void Update()
+    void LateUpdate()
+    {
+        if (player != null)
+        {
+            Vector3 targetPosition = player.position + offset;
+            transform.position = Vector3.Lerp(transform.position, targetPosition, followSpeed * Time.deltaTime);
+            transform.LookAt(player.position); 
+        }
+
+        HandleMouseInput();
+    }
+
+    void HandleMouseInput()
     {
         Vector3 delta = Vector3.zero;
 
@@ -30,7 +46,6 @@ public class CameraController : MonoBehaviour
             delta = Input.mousePosition - lastMousePosition;
             float rotationX = -delta.y * sensitivity;
             float rotationY = delta.x * sensitivity;
-
             transform.eulerAngles += new Vector3(rotationX, rotationY, 0);
         }
 
@@ -49,7 +64,7 @@ public class CameraController : MonoBehaviour
             Vector3 zoomDirection = transform.forward * scroll * zoomSpeed;
             Vector3 newPosition = transform.position + zoomDirection;
 
-            float newDistance = (newPosition - Vector3.zero).magnitude;
+            float newDistance = (newPosition - player.position).magnitude;
             if (newDistance > minZoom && newDistance < maxZoom)
             {
                 transform.position = newPosition;
